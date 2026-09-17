@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../database/database_helper.dart';
+import '../models/usuario_model.dart';
+import '../repositories/usuario_repository.dart';
 
 class CadastroPage extends StatefulWidget {
   const CadastroPage({super.key});
@@ -37,8 +39,16 @@ class _CadastroPageState extends State<CadastroPage> {
       return;
     }
 
-    // O banco precisará ser atualizado no futuro para salvar o "estabelecimento"
-    await DatabaseHelper.instance.cadastrarUsuario(nome, email, senha);
+    final novoUsuario = Usuario(
+      nome: nome,
+      estabelecimento: estabelecimento,
+      email: email,
+      senha: senha,
+    );
+
+    // Envia o objeto para o repositório salvar no banco
+    final repository = UsuarioRepository();
+    await repository.cadastrarUsuario(novoUsuario);
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
