@@ -2,49 +2,69 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
+  // Padrão Singleton para garantir apenas uma instância do banco
+  DatabaseHelper._privateConstructor();
+  static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
-  DatabaseHelper._init();
+  static Database? _database;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('fastbuy.db'); 
+    _database = await _initDatabase();
     return _database!;
   }
 
-  Future<Database> _initDB(String filePath) async {
-
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-
+  Future<Database> _initDatabase() async {
+    // Define o caminho onde o arquivo do banco será salvo no celular
+    String path = join(await getDatabasesPath(), 'fastbuy_database.db');
+    
     return await openDatabase(
       path,
-      version: 1,
-      onCreate: _createDB,
+      version: 2, 
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
-    Future _createDB(Database db, int version) async {
-        await db.execute('''
-        CREATE TABLE usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            senha TEXT NOT NULL
-        )
-        ''');
+  Future _onCreate(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE usuarios(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        estabelecimento TEXT,
+        email TEXT,
+        senha TEXT
+      )
+    ''');
   }
 
-  Future<int> cadastrarUsuario(String nome, String email, String senha) async {
-    final db = await instance.database;
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute("ALTER TABLE usuarios ADD COLUMN estabelecimento TEXT;");
+    }
+  }
 
-    final dadosUsuario = {
+  // MÉTODOS DO BACKEND
+
+  Future<int> cadastrarUsuario(String nome, String estabelecimento, String email, String senha) async {
+    Database db = await instance.database;
+    return await db.insert('usuarios', {
       'nome': nome,
+      'estabelecimento': estabelecimento,
       'email': email,
-      'senha': senha, 
-    };
-    return await db.insert('usuarios', dadosUsuario);
+      'senha': senha,
+    });
+  }
+
+  Future<bool> verificarLogin(String email, String senha) async {
+    Database db = await instance.database;
+    
+    List<Map<String, dynamic>> resultado = await db.query(
+      'usuarios',
+      where: 'email = ? AND senha = ?',
+      whereArgs: [email, senha],
+    );
+    
+    return resultado.isNotEmpty;
   }
 }
