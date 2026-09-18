@@ -1,4 +1,4 @@
-# 🚀 FastBuy
+# 🚀FastBuy🚀
 
 Um aplicativo mobile desenvolvido em Flutter focado em facilitar o cadastro e acesso de lojistas e usuários. O projeto possui um fluxo completo de Autenticação e Registro, utilizando persistência de dados local e seguindo boas práticas de separação de responsabilidades (Clean Architecture).
 
