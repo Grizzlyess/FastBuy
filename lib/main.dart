@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/login_page.dart';
+import 'pages/home_page.dart'; 
 
 void main() {
   runApp(const FastBuyApp());
@@ -16,7 +16,7 @@ class FastBuyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: const Color(0xFF1E3A8A),
       ),
-      home: LoginPage(), 
+      home: const HomePage(), 
     );
   }
 }
