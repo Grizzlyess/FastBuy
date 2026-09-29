@@ -1,8 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/produto_model.dart';
+import '../repositories/produto_repository.dart';
 
-class ProdutosPage extends StatelessWidget {
+class ProdutosPage extends StatefulWidget {
   const ProdutosPage({super.key});
+
+  @override
+  State<ProdutosPage> createState() => _ProdutosPageState();
+}
+
+class _ProdutosPageState extends State<ProdutosPage> {
+  final _nomeController = TextEditingController();
+  final _quantidadeController = TextEditingController();
+  final _valorController = TextEditingController(); // Adicionado para o preço
+
+  final _repository = ProdutoRepository();
+  
+  List<Produto> _produtos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarProdutos();
+  }
+
+  Future<void> _carregarProdutos() async {
+    final lista = await _repository.listarProdutos();
+    setState(() {
+      _produtos = lista;
+    });
+  }
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _quantidadeController.dispose();
+    _valorController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

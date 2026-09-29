@@ -34,6 +34,16 @@ class DatabaseHelper {
         senha TEXT
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE produtos(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        quantidade INTEGER,
+        valor REAL,
+        imagemPath TEXT
+      )
+    ''');
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
