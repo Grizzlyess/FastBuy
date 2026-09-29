@@ -13,7 +13,7 @@ class ProdutosPage extends StatefulWidget {
 class _ProdutosPageState extends State<ProdutosPage> {
   final _nomeController = TextEditingController();
   final _quantidadeController = TextEditingController();
-  final _valorController = TextEditingController(); // Adicionado para o preço
+  final _valorController = TextEditingController(); 
 
   final _repository = ProdutoRepository();
   
@@ -261,7 +261,6 @@ class _ProdutosPageState extends State<ProdutosPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(15),
-
                   ),
                   child: const Center(
                     child: Icon(Icons.add_photo_alternate_outlined, size: 40, color: Colors.black26),
@@ -270,6 +269,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 const SizedBox(height: 20),
                 
                 TextField(
+                  controller: _nomeController, 
                   decoration: InputDecoration(
                     hintText: 'Nome',
                     hintStyle: GoogleFonts.poppins(color: Colors.black38),
@@ -284,40 +284,78 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 ),
                 const SizedBox(height: 16),
                 
-                TextField(
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: 'Quantidade',
-                    hintStyle: GoogleFonts.poppins(color: Colors.black38),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
+                // Row para colocar Quantidade e Valor lado a lado
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _quantidadeController, 
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          hintText: 'Quantidade',
+                          hintStyle: GoogleFonts.poppins(color: Colors.black38),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _valorController, 
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(
+                          hintText: 'Valor (R\$)',
+                          hintStyle: GoogleFonts.poppins(color: Colors.black38),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 
+                // Botão Salvar
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A3B5C), // Azul escuro
+                      backgroundColor: const Color(0xFF1A3B5C),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _mostrarDialogSucesso(context);
+                    onPressed: () async {
+                      final novoProduto = Produto(
+                        nome: _nomeController.text,
+                        quantidade: int.tryParse(_quantidadeController.text) ?? 0,
+                        valor: double.tryParse(_valorController.text.replaceAll(',', '.')) ?? 0.0,
+                      );
+
+                      await _repository.cadastrarProduto(novoProduto);
+
+                      _nomeController.clear();
+                      _quantidadeController.clear();
+                      _valorController.clear();
+
+                      _carregarProdutos();
+
+                      if (context.mounted) {
+                        Navigator.pop(context); 
+                        _mostrarDialogSucesso(context); 
+                      }
                     },
-                    child: Text(
-                      'Salvar',
-                      style: GoogleFonts.poppins(fontSize: 20, color: Colors.white),
-                    ),
+                    child: Text('Salvar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
                   ),
                 ),
               ],
