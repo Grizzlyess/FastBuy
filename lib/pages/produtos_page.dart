@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/produto_model.dart';
 import '../repositories/produto_repository.dart';
+import 'dart:io';
 
 class ProdutosPage extends StatefulWidget {
   const ProdutosPage({super.key});
@@ -18,6 +20,9 @@ class _ProdutosPageState extends State<ProdutosPage> {
   final _repository = ProdutoRepository();
   
   List<Produto> _produtos = [];
+
+  File? _imagemSelecionada;
+
 
   @override
   void initState() {
@@ -198,11 +203,22 @@ class _ProdutosPageState extends State<ProdutosPage> {
             children: [
               Expanded(
                 child: Container(
+                  width: double.infinity,
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
                   ),
-                  child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                  child: produto.imagemPath != null && produto.imagemPath!.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                          child: Image.file(
+                            File(produto.imagemPath!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => 
+                                const Icon(Icons.image, size: 50, color: Colors.grey),
+                          ),
+                        )
+                      : const Icon(Icons.image, size: 50, color: Colors.grey),
                 ),
               ),
               Padding(
@@ -248,141 +264,156 @@ class _ProdutosPageState extends State<ProdutosPage> {
   }
 
   void _mostrarDialogAdicionar(BuildContext context) {
+    _imagemSelecionada = null; 
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: const Color(0xFFD4D8DD), 
-          insetPadding: const EdgeInsets.all(20),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min, 
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: const Color(0xFFD4D8DD), 
+              insetPadding: const EdgeInsets.all(20),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, 
                   children: [
-                    Text(
-                      'Adicionar produto',
-                      style: GoogleFonts.pacifico(fontSize: 26, color: const Color(0xFF1E3A8A)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Adicionar produto',
+                          style: GoogleFonts.pacifico(fontSize: 26, color: const Color(0xFF1E3A8A)),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 28, color: Color(0xFF1E3A8A)),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 28, color: Color(0xFF1E3A8A)),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => Navigator.pop(context),
+                    const SizedBox(height: 20),
+                    
+
+                    GestureDetector(
+                      onTap: () async {
+                        final arquivos = await FilePicker.pickFiles(
+                          type: FileType.image, 
+                        );
+
+                        if (arquivos != null && arquivos.isNotEmpty && arquivos.first.path != null) {
+                          setStateModal(() {
+                            _imagemSelecionada = File(arquivos.first.path!);
+                          });
+                        }
+                      },
+                      child: Container(
+                        height: 140,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          image: _imagemSelecionada != null 
+                              ? DecorationImage(
+                                  image: FileImage(_imagemSelecionada!),
+                                  fit: BoxFit.contain,
+                                )
+                              : null,
+                        ),
+                        child: _imagemSelecionada == null 
+                            ? const Center(child: Icon(Icons.add_photo_alternate_outlined, size: 40, color: Colors.black26))
+                            : null,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _nomeController,
+                      decoration: InputDecoration(
+                        hintText: 'Nome',
+                        hintStyle: GoogleFonts.poppins(color: Colors.black38),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _quantidadeController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              hintText: 'Quantidade',
+                              hintStyle: GoogleFonts.poppins(color: Colors.black38),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: _valorController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: InputDecoration(
+                              hintText: 'Valor (R\$)',
+                              hintStyle: GoogleFonts.poppins(color: Colors.black38),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1A3B5C),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        ),
+                        onPressed: () async {
+                          final novoProduto = Produto(
+                            nome: _nomeController.text,
+                            quantidade: int.tryParse(_quantidadeController.text) ?? 0,
+                            valor: double.tryParse(_valorController.text.replaceAll(',', '.')) ?? 0.0,
+                            imagemPath: _imagemSelecionada?.path, 
+                          );
+
+                          await _repository.cadastrarProduto(novoProduto);
+
+                          _nomeController.clear();
+                          _quantidadeController.clear();
+                          _valorController.clear();
+                          _imagemSelecionada = null;
+
+                          _carregarProdutos();
+
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            _mostrarDialogSucesso(context);
+                          }
+                        },
+                        child: Text('Salvar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                
-                Container(
-                  height: 140,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.add_photo_alternate_outlined, size: 40, color: Colors.black26),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                
-                TextField(
-                  controller: _nomeController, 
-                  decoration: InputDecoration(
-                    hintText: 'Nome',
-                    hintStyle: GoogleFonts.poppins(color: Colors.black38),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                //Quantidade e Valor lado a lado
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _quantidadeController, 
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: 'Quantidade',
-                          hintStyle: GoogleFonts.poppins(color: Colors.black38),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: _valorController, 
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(
-                          hintText: 'Valor (R\$)',
-                          hintStyle: GoogleFonts.poppins(color: Colors.black38),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                
-                // Botão Salvar
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A3B5C),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    ),
-                    onPressed: () async {
-                      final novoProduto = Produto(
-                        nome: _nomeController.text,
-                        quantidade: int.tryParse(_quantidadeController.text) ?? 0,
-                        valor: double.tryParse(_valorController.text.replaceAll(',', '.')) ?? 0.0,
-                      );
-
-                      await _repository.cadastrarProduto(novoProduto);
-
-                      _nomeController.clear();
-                      _quantidadeController.clear();
-                      _valorController.clear();
-
-                      _carregarProdutos();
-
-                      if (context.mounted) {
-                        Navigator.pop(context); 
-                        _mostrarDialogSucesso(context); 
-                      }
-                    },
-                    child: Text('Salvar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          }
         );
       },
     );
