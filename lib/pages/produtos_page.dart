@@ -63,22 +63,36 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 _buildBotaoPesquisa(),
                 
 
+                // Grelha de produtos
+                // Grelha de produtos
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: GridView.builder(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 0.75,
-                      ),
-                      itemCount: 6, 
-                      itemBuilder: (context, index) {
-                        return _buildCardProduto();
-                      },
-                    ),
+                    child: _produtos.isEmpty 
+                      ? Center(
+                          child: Text(
+                            'Nenhum produto cadastrado ainda !',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.pacifico(
+                              fontSize: 40, 
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                      : GridView.builder(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.75,
+                          ),
+                          itemCount: _produtos.length,
+                          itemBuilder: (context, index) {
+                            final produto = _produtos[index];
+                            return _buildCardProduto(produto);
+                          },
+                        ),
                   ),
                 ),
               ],
@@ -171,7 +185,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
     );
   }
 
-  Widget _buildCardProduto() {
+  Widget _buildCardProduto(Produto produto) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFE0E0E0),
@@ -195,15 +209,23 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    Text('Nome do Produto', style: GoogleFonts.poppins(fontSize: 12), textAlign: TextAlign.center),
-                    Text('Valor: 10.50', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(
+                      produto.nome, 
+                      style: GoogleFonts.poppins(fontSize: 12), 
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'Valor: ${produto.valor.toStringAsFixed(2)}', 
+                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
               )
             ],
           ),
           
-          // Etiqueta de quantidade
           Positioned(
             top: 8,
             left: 8,
@@ -215,7 +237,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 border: Border.all(color: Colors.black45, width: 0.5),
               ),
               child: Text(
-                '10 uni',
+                '${produto.quantidade} uni',
                 style: GoogleFonts.poppins(fontSize: 10, color: Colors.black87),
               ),
             ),
@@ -284,7 +306,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Row para colocar Quantidade e Valor lado a lado
+                //Quantidade e Valor lado a lado
                 Row(
                   children: [
                     Expanded(
