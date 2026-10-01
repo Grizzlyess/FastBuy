@@ -258,13 +258,37 @@ class _ProdutosPageState extends State<ProdutosPage> {
               ),
             ),
           ),
+          
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: () => _mostrarDialogAdicionar(context, produto: produto),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 2)],
+                ),
+                child: const Icon(Icons.edit, size: 16, color: Color(0xFF1E3A8A)),
+              ),
+            ),
+          ),
         ],
+
       ),
     );
   }
 
-  void _mostrarDialogAdicionar(BuildContext context) {
-    _imagemSelecionada = null; 
+  void _mostrarDialogAdicionar(BuildContext context, {Produto? produto}) {
+    
+    _nomeController.text = produto?.nome ?? '';
+    _quantidadeController.text = produto?.quantidade.toString() ?? '';
+    _valorController.text = produto?.valor.toStringAsFixed(2) ?? '';
+    _imagemSelecionada = (produto?.imagemPath != null && produto!.imagemPath!.isNotEmpty) 
+        ? File(produto.imagemPath!) 
+        : null; 
 
     showDialog(
       context: context,
@@ -284,7 +308,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Adicionar produto',
+                          produto == null ? 'Adicionar produto' : 'Editar produto',
                           style: GoogleFonts.pacifico(fontSize: 26, color: const Color(0xFF1E3A8A)),
                         ),
                         IconButton(
@@ -384,15 +408,21 @@ class _ProdutosPageState extends State<ProdutosPage> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                         ),
+
                         onPressed: () async {
-                          final novoProduto = Produto(
+                          final produtoPronto = Produto(
+                            id: produto?.id, 
                             nome: _nomeController.text,
                             quantidade: int.tryParse(_quantidadeController.text) ?? 0,
                             valor: double.tryParse(_valorController.text.replaceAll(',', '.')) ?? 0.0,
                             imagemPath: _imagemSelecionada?.path, 
                           );
 
-                          await _repository.cadastrarProduto(novoProduto);
+                          if (produto == null) {
+                            await _repository.cadastrarProduto(produtoPronto);
+                          } else {
+                            await _repository.atualizarProduto(produtoPronto);
+                          }
 
                           _nomeController.clear();
                           _quantidadeController.clear();
@@ -406,6 +436,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
                             _mostrarDialogSucesso(context);
                           }
                         },
+
                         child: Text('Salvar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
                       ),
                     ),

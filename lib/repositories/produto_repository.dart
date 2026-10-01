@@ -17,5 +17,17 @@ class ProdutoRepository {
     return List.generate(maps.length, (i) {
       return Produto.fromMap(maps[i]);
     });
+    
+  }
+
+  Future<int> atualizarProduto(Produto produto) async {
+    Database db = await dbHelper.database; 
+    
+    return await db.update(
+      'produtos',
+      produto.toMap(), 
+      where: 'id = ?',
+      whereArgs: [produto.id],
+    );
   }
 }
