@@ -4,7 +4,6 @@ import '../models/produto_model.dart';
 import '../repositories/produto_repository.dart';
 import 'dart:io';
 
-// Classe auxiliar para gerir a quantidade do produto na venda
 class ItemVenda {
   final Produto produto;
   int quantidadeSelecionada;
@@ -156,7 +155,6 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                   color: Colors.white,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                   boxShadow: [
-                     // Sombra subtil para destacar o painel sobre a grelha
                     BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))
                   ]
                 ),
@@ -186,7 +184,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                       ),
                     ),
                     
-                    // LISTA DE ITENS (Só aparece se estiver expandido)
+                    // LISTA DE ITENS
                     if (_carrinhoExpandido)
                       Expanded(
                         child: ListView.builder(
