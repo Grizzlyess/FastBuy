@@ -30,4 +30,13 @@ class ProdutoRepository {
       whereArgs: [produto.id],
     );
   }
+
+  Future<void> atualizarEstoquePosVenda(int idProduto, int quantidadeVendida) async {
+    Database db = await dbHelper.database; 
+    
+    await db.rawUpdate(
+      'UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?',
+      [quantidadeVendida, idProduto]
+    );
+  }
 }
