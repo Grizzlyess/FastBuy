@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'produtos_page.dart';
-// import 'carrinho_page.dart';
+import 'carrinho_page.dart';
 // import 'relatorios_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,7 +16,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _paginas = [
     const ProdutosPage(),
-    const Center(child: Text('Página do Carrinho (Em breve)')),
+    const CarrinhoPage(),
     const Center(child: Text('Página de Relatórios (Em breve)')),
   ];
 
