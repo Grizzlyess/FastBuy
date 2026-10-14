@@ -4,6 +4,7 @@ import '../models/produto_model.dart';
 import '../repositories/produto_repository.dart';
 import 'dart:io';
 
+// Classe auxiliar para gerir a quantidade do produto na venda
 class ItemVenda {
   final Produto produto;
   int quantidadeSelecionada;
@@ -21,7 +22,12 @@ class CarrinhoPage extends StatefulWidget {
 class _CarrinhoPageState extends State<CarrinhoPage> {
   final _repository = ProdutoRepository();
   List<ItemVenda> _itensVenda = [];
+  
   bool _carrinhoExpandido = false;
+  
+  // NOVAS VARIÁVEIS PARA A TELA DE SUCESSO
+  bool _vendaConcluida = false; 
+  double _ultimoTotal = 0.0;    
 
   @override
   void initState() {
@@ -71,7 +77,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
               children: [
                 _buildCabecalho(),
                 
-                // CARD DE TOTAL DA VENDA
+                // CARD DE TOTAL DA VENDA (Mostra o total guardado se a venda foi concluída)
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -86,7 +92,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                           style: GoogleFonts.poppins(
                               fontSize: 20, fontWeight: FontWeight.w500)),
                       Text(
-                        'R\$ ${_totalVenda.toStringAsFixed(2).replaceAll('.', ',')}',
+                        'R\$ ${(_vendaConcluida ? _ultimoTotal : _totalVenda).toStringAsFixed(2).replaceAll('.', ',')}',
                         style: GoogleFonts.poppins(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -96,134 +102,183 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                   ),
                 ),
 
-                _buildBotaoPesquisa(),
-
-                // Grelha de produtos
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: _itensVenda.isEmpty
-                        ? Center(
-                            child: Text(
-                              'Estoque vazio!',
-                              style: GoogleFonts.pacifico(
-                                fontSize: 30,
-                                color: Colors.white,
-                              ),
-                            ),
-                          )
-                        : GridView.builder(
-                            padding: const EdgeInsets.only(bottom: 120), // Espaço para não ficar por baixo do painel do carrinho
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 0.75,
-                            ),
-                            itemCount: _itensVenda.length,
-                            itemBuilder: (context, index) {
-                              return _buildCardProdutoVenda(index);
-                            },
+                // TRANSIÇÃO: SE VENDA CONCLUÍDA MOSTRA SUCESSO, SENÃO MOSTRA PRODUTOS
+                if (_vendaConcluida) ...[
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Venda concluída\ncom sucesso!',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.pacifico(
+                            fontSize: 36,
+                            color: Colors.white,
+                            height: 1.2,
                           ),
+                        ),
+                        const SizedBox(height: 30),
+                        const Icon(
+                          Icons.thumb_up_alt_outlined, // Ícone parecido com o seu design
+                          size: 100,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 50),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          ),
+                          onPressed: () {
+                            // Volta ao modo normal de venda
+                            setState(() {
+                              _vendaConcluida = false;
+                            });
+                          },
+                          child: Text('Nova Venda', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E3A8A))),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ] else ...[
+                  _buildBotaoPesquisa(),
+                  // Grelha de produtos
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: _itensVenda.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Estoque vazio!',
+                                style: GoogleFonts.pacifico(
+                                  fontSize: 30,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : GridView.builder(
+                              padding: const EdgeInsets.only(bottom: 160), 
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.75,
+                              ),
+                              itemCount: _itensVenda.length,
+                              itemBuilder: (context, index) {
+                                return _buildCardProdutoVenda(index);
+                              },
+                            ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
 
-          // PAINEL FIXO DO CARRINHO EM BAIXO
-          // PAINEL EXPANSÍVEL DO CARRINHO
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: GestureDetector( // Deteta o toque na palavra 'Carrinho'
-              onVerticalDragUpdate: (details) {
-                // Permite arrastar para baixo para fechar
-                if (details.primaryDelta! > 10 && _carrinhoExpandido) {
-                   setState(() => _carrinhoExpandido = false);
-                }
-                 // Permite arrastar para cima para abrir
-                else if (details.primaryDelta! < -10 && !_carrinhoExpandido) {
-                  setState(() => _carrinhoExpandido = true);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                height: _carrinhoExpandido ? 400 : 145, // Altura muda consoante o estado
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))
-                  ]
-                ),
-                child: Column(
-                  children: [
-                    // CABEÇALHO DO PAINEL (Clica para expandir/recolher)
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _carrinhoExpandido = !_carrinhoExpandido;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.only(top: 16, bottom: 8, left: 24, right: 24),
-                        color: Colors.transparent,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Carrinho',
-                              style: GoogleFonts.pacifico(fontSize: 28, color: const Color(0xFF1E3A8A)),
-                            ),
-                            const SizedBox(width: 10),
-                            Icon(_carrinhoExpandido ? Icons.keyboard_arrow_down : Icons.menu, color: const Color(0xFF1E3A8A), size: 28),
-                          ],
+          // PAINEL EXPANSÍVEL DO CARRINHO (Esconde quando a venda está concluída)
+          if (!_vendaConcluida)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: GestureDetector(
+                onVerticalDragUpdate: (details) {
+                  if (details.primaryDelta! > 10 && _carrinhoExpandido) {
+                    setState(() => _carrinhoExpandido = false);
+                  } else if (details.primaryDelta! < -10 && !_carrinhoExpandido) {
+                    setState(() => _carrinhoExpandido = true);
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  height: _carrinhoExpandido ? 400 : 150, 
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))
+                    ]
+                  ),
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _carrinhoExpandido = !_carrinhoExpandido;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.only(top: 16, bottom: 8, left: 24, right: 24),
+                          color: Colors.transparent,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Carrinho',
+                                style: GoogleFonts.pacifico(fontSize: 28, color: const Color(0xFF1E3A8A)),
+                              ),
+                              const SizedBox(width: 10),
+                              Icon(_carrinhoExpandido ? Icons.keyboard_arrow_down : Icons.menu, color: const Color(0xFF1E3A8A), size: 28),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    
-                    // LISTA DE ITENS
-                    if (_carrinhoExpandido)
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _itensVenda.where((item) => item.quantidadeSelecionada > 0).length,
-                          itemBuilder: (context, index) {
-                            // Filtra apenas os itens com quantidade > 0
-                            final itensNoCarrinho = _itensVenda.where((item) => item.quantidadeSelecionada > 0).toList();
-                            final item = itensNoCarrinho[index];
-                            return ListTile(
-                              title: Text(item.produto.nome, style: GoogleFonts.poppins()),
-                              subtitle: Text('R\$ ${item.produto.valor.toStringAsFixed(2)}', style: GoogleFonts.poppins(color: Colors.grey)),
-                              trailing: Text('Qtd: ${item.quantidadeSelecionada}', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                            );
-                          },
+                      
+                      if (_carrinhoExpandido)
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _itensVenda.where((item) => item.quantidadeSelecionada > 0).length,
+                            itemBuilder: (context, index) {
+                              final itensNoCarrinho = _itensVenda.where((item) => item.quantidadeSelecionada > 0).toList();
+                              final item = itensNoCarrinho[index];
+                              return ListTile(
+                                title: Text(item.produto.nome, style: GoogleFonts.poppins()),
+                                subtitle: Text('R\$ ${item.produto.valor.toStringAsFixed(2)}', style: GoogleFonts.poppins(color: Colors.grey)),
+                                trailing: Text('Qtd: ${item.quantidadeSelecionada}', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                              );
+                            },
+                          ),
                         ),
-                      ),
 
-                    // BOTÃO FINALIZAR
-                    Padding(
-                      padding: const EdgeInsets.only(left: 40.0, right: 40.0, bottom: 20.0, top: 10),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1A3B5C),
-                          minimumSize: const Size(double.infinity, 45),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                      // BOTÃO FINALIZAR
+                      Padding(
+                        padding: const EdgeInsets.only(left: 40.0, right: 40.0, bottom: 20.0, top: 10),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1A3B5C),
+                            minimumSize: const Size(double.infinity, 45),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                          ),
+                          onPressed: _totalVenda > 0 ? () async {
+                            // 1. Desconta no banco de dados
+                            for (var item in _itensVenda) {
+                              if (item.quantidadeSelecionada > 0 && item.produto.id != null) {
+                                await _repository.atualizarEstoquePosVenda(
+                                    item.produto.id!, item.quantidadeSelecionada);
+                              }
+                            }
+
+                            // 2. Transição visual para a tela de Sucesso
+                            setState(() {
+                              _ultimoTotal = _totalVenda; // Guarda o valor para mostrar na tela final
+                              _vendaConcluida = true;     // Ativa a tela de sucesso
+                              _carrinhoExpandido = false; // Recolhe o carrinho
+                            });
+
+                            // 3. Recarrega os dados do banco por trás dos panos
+                            _carregarProdutos();
+                          } : null,
+                          child: Text('Finalizar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
                         ),
-                        onPressed: _totalVenda > 0 ? () async {
-                           // Lógica de finalização aqui...
-                           // (Cole a lógica de finalização e baixa de stock que criei na resposta anterior)
-                        } : null,
-                        child: Text('Finalizar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -291,15 +346,14 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(15)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
                   ),
                   child: item.produto.imagemPath != null && item.produto.imagemPath!.isNotEmpty
                       ? ClipRRect(
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                           child: Image.file(
                             File(item.produto.imagemPath!),
-                            fit: BoxFit.contain, // Modificado para imagem caber toda
+                            fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) =>
                                 const Icon(Icons.image, size: 50, color: Colors.grey),
                           ),
@@ -320,15 +374,13 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                     ),
                     Text(
                       'Valor: ${item.produto.valor.toStringAsFixed(2)}',
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
               )
             ],
           ),
-          // CONTROLO DE QUANTIDADE (Canto Superior Direito)
           Positioned(
             top: 5,
             right: 5,
