@@ -328,7 +328,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
                           type: FileType.image, 
                         );
 
-                        if (arquivos != null && arquivos.isNotEmpty && arquivos.first.path != null) {
+                        if (arquivos.isNotEmpty && arquivos.first.path != null) {
                           setStateModal(() {
                             _imagemSelecionada = File(arquivos.first.path!);
                           });

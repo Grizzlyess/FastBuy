@@ -18,7 +18,7 @@ class DatabaseHelper {
     
     return await openDatabase(
       path,
-      version: 2, 
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -44,11 +44,35 @@ class DatabaseHelper {
         imagemPath TEXT
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE vendas(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        produto_id INTEGER,
+        nome_produto TEXT,
+        quantidade_vendida INTEGER,
+        valor_total REAL,
+        data_venda TEXT
+      )
+    ''');
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute("ALTER TABLE usuarios ADD COLUMN estabelecimento TEXT;");
+    }
+    
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE vendas(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          produto_id INTEGER,
+          nome_produto TEXT,
+          quantidade_vendida INTEGER,
+          valor_total REAL,
+          data_venda TEXT
+        )
+      ''');
     }
   }
 }

@@ -77,7 +77,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
               children: [
                 _buildCabecalho(),
                 
-                // CARD DE TOTAL DA VENDA (Mostra o total guardado se a venda foi concluída)
+                // CARD DE TOTAL DA VENDA
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -119,7 +119,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                         ),
                         const SizedBox(height: 30),
                         const Icon(
-                          Icons.thumb_up_alt_outlined, // Ícone parecido com o seu design
+                          Icons.thumb_up_alt_outlined, 
                           size: 100,
                           color: Colors.white,
                         ),
@@ -131,7 +131,6 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                           ),
                           onPressed: () {
-                            // Volta ao modo normal de venda
                             setState(() {
                               _vendaConcluida = false;
                             });
@@ -177,7 +176,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
             ),
           ),
 
-          // PAINEL EXPANSÍVEL DO CARRINHO (Esconde quando a venda está concluída)
+          // PAINEL EXPANSÍVEL DO CARRINHO
           if (!_vendaConcluida)
             Align(
               alignment: Alignment.bottomCenter,
@@ -198,7 +197,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                     color: Colors.white,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -5))
                     ]
                   ),
                   child: Column(
@@ -243,7 +242,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                           ),
                         ),
 
-                      // BOTÃO FINALIZAR
+                      // BOTÃO FINALIZAR ATUALIZADO
                       Padding(
                         padding: const EdgeInsets.only(left: 40.0, right: 40.0, bottom: 20.0, top: 10),
                         child: ElevatedButton(
@@ -253,22 +252,24 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                           ),
                           onPressed: _totalVenda > 0 ? () async {
-                            // 1. Desconta no banco de dados
+                            // 1. Desconta no banco de dados e regista o histórico
                             for (var item in _itensVenda) {
                               if (item.quantidadeSelecionada > 0 && item.produto.id != null) {
                                 await _repository.atualizarEstoquePosVenda(
-                                    item.produto.id!, item.quantidadeSelecionada);
+                                    item.produto.id!, 
+                                    item.quantidadeSelecionada,
+                                    (item.produto.valor * item.quantidadeSelecionada), 
+                                    item.produto.nome
+                                );
                               }
                             }
 
-                            // 2. Transição visual para a tela de Sucesso
                             setState(() {
-                              _ultimoTotal = _totalVenda; // Guarda o valor para mostrar na tela final
-                              _vendaConcluida = true;     // Ativa a tela de sucesso
-                              _carrinhoExpandido = false; // Recolhe o carrinho
+                              _ultimoTotal = _totalVenda; 
+                              _vendaConcluida = true;     
+                              _carrinhoExpandido = false; 
                             });
 
-                            // 3. Recarrega os dados do banco por trás dos panos
                             _carregarProdutos();
                           } : null,
                           child: Text('Finalizar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
