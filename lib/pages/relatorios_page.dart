@@ -148,7 +148,7 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
     );
   }*/
 
-  Widget _buildCabecalho(BuildContext context) { // Adicione o BuildContext aqui
+  Widget _buildCabecalho(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
@@ -165,15 +165,17 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
             ),
             child: PopupMenuButton<String>(
               offset: const Offset(0, 50),
-              color: const Color(0xFF1A1F30), // Fundo escuro do menu
+              color: const Color(0xFF1A1F30), 
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Colors.deepPurple, width: 1.5),
+                // AQUI: Contorno da caixinha agora é totalmente BRANCO
+                side: const BorderSide(color: Colors.white, width: 1.5),
               ),
+              // A bolinha do perfil padrão (Branca com boneco azul)
               icon: const CircleAvatar(
                 radius: 22,
-                backgroundImage: AssetImage('assets/hello_kitty.png'), // O caminho da sua imagem
                 backgroundColor: Colors.white,
+                child: Icon(Icons.person, color: Color(0xFF1E3A8A), size: 28),
               ),
               onSelected: (String valor) {
                 if (valor == 'historico') {
@@ -189,7 +191,7 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
                   enabled: false,
                   child: Center(
                     child: Text(
-                      'Hello Kitty', // Nome da loja no topo do menu
+                      'Nome', // Texto padrão sem nome
                       style: GoogleFonts.pacifico(color: Colors.white, fontSize: 22),
                     ),
                   ),
