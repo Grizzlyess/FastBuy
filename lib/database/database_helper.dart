@@ -26,12 +26,14 @@ class DatabaseHelper {
 
   Future _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE usuarios(
+      CREATE TABLE vendas(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT,
-        estabelecimento TEXT,
-        email TEXT,
-        senha TEXT
+        produto_id INTEGER,
+        nome_produto TEXT,
+        quantidade_vendida INTEGER,
+        valor_total REAL,
+        metodo_pagamento TEXT, -- NOVA COLUNA
+        data_venda TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     ''');
 

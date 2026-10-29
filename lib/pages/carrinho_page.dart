@@ -1,3 +1,4 @@
+import 'package:fastbuy/pages/historico_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/produto_model.dart';
@@ -75,7 +76,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
           SafeArea(
             child: Column(
               children: [
-                _buildCabecalho(),
+                _buildCabecalho(context),
                 
                 // CARD DE TOTAL DA VENDA
                 Container(
@@ -285,7 +286,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
     );
   }
 
-  Widget _buildCabecalho() {
+  /*Widget _buildCabecalho() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
@@ -303,6 +304,93 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
               backgroundColor: Colors.white,
               radius: 20,
               child: Icon(Icons.person, color: Color(0xFF1E3A8A)), 
+            ),
+          ),
+        ],
+      ),
+    );
+  }*/
+
+  Widget _buildCabecalho(BuildContext context) { // Adicione o BuildContext aqui
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '🚀FastBuy🚀',
+            style: GoogleFonts.pacifico(color: Colors.white, fontSize: 24),
+          ),
+          Theme(
+            data: Theme.of(context).copyWith(
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+            ),
+            child: PopupMenuButton<String>(
+              offset: const Offset(0, 50),
+              color: const Color(0xFF1A1F30), // Fundo escuro do menu
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Colors.deepPurple, width: 1.5),
+              ),
+              icon: const CircleAvatar(
+                radius: 22,
+                backgroundImage: AssetImage('assets/hello_kitty.png'), // O caminho da sua imagem
+                backgroundColor: Colors.white,
+              ),
+              onSelected: (String valor) {
+                if (valor == 'historico') {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoricoPage()));
+                } else if (valor == 'nome') {
+                  print("Ação: Mudar Nome");
+                } else if (valor == 'foto') {
+                  print("Ação: Trocar Foto");
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  enabled: false,
+                  child: Center(
+                    child: Text(
+                      'Hello Kitty', // Nome da loja no topo do menu
+                      style: GoogleFonts.pacifico(color: Colors.white, fontSize: 22),
+                    ),
+                  ),
+                ),
+                const PopupMenuDivider(height: 1),
+                PopupMenuItem<String>(
+                  value: 'nome',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.store, color: Colors.white, size: 20),
+                      const SizedBox(width: 12),
+                      Text('Mudar Nome', style: GoogleFonts.poppins(color: Colors.white)),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(height: 1),
+                PopupMenuItem<String>(
+                  value: 'foto',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                      const SizedBox(width: 12),
+                      Text('Trocar Foto', style: GoogleFonts.poppins(color: Colors.white)),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(height: 1),
+                PopupMenuItem<String>(
+                  value: 'historico',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_month, color: Colors.white, size: 20),
+                      const SizedBox(width: 12),
+                      Text('Histórico de Vendas', style: GoogleFonts.poppins(color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

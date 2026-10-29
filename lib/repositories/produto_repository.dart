@@ -90,4 +90,14 @@ Future<List<Map<String, dynamic>>> getTop5MenosVendidos() async {
       LIMIT 5
     ''');
   }
+
+  Future<List<Map<String, dynamic>>> getTransacoesPorData(String dataIso) async {
+  Database db = await dbHelper.database;
+  return await db.rawQuery('''
+    SELECT nome_produto, quantidade_vendida, valor_total, metodo_pagamento, time(data_venda) as hora
+    FROM vendas 
+    WHERE date(data_venda) = ?
+    ORDER BY data_venda DESC
+  ''', [dataIso]);
+}
 }
