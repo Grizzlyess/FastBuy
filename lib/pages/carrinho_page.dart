@@ -466,7 +466,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
     );
   }
 
-  Widget _buildCardProdutoVenda(int index) {
+  /*Widget _buildCardProdutoVenda(int index) {
     final item = _itensVenda[index];
     
     return Container(
@@ -557,5 +557,90 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
         ],
       ),
     );
+  }*/
+
+  Widget _buildCardProdutoVenda(int index) {
+    final item = _itensVenda[index];
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFE0E0E0),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // IMAGEM DO PRODUTO
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+              ),
+              child: item.produto.imagemPath != null && item.produto.imagemPath!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                      child: Image.file(
+                        File(item.produto.imagemPath!),
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.image, size: 50, color: Colors.grey),
+                      ),
+                    )
+                  : const Icon(Icons.image, size: 50, color: Colors.grey),
+            ),
+          ),
+          
+          // INFO
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+            child: Column(
+              children: [
+                Text(
+                  item.produto.nome,
+                  style: GoogleFonts.poppins(fontSize: 12),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'Valor: ${item.produto.valor.toStringAsFixed(2)}',
+                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+
+          // + E -
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white, 
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(15)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  iconSize: 28,
+                  icon: const Icon(Icons.remove_circle_outline, color: Colors.black54),
+                  onPressed: () => _alterarQuantidade(index, -1),
+                ),
+                Text(
+                  '${item.quantidadeSelecionada}',
+                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold), 
+                ),
+                IconButton(
+                  iconSize: 28, 
+                  icon: const Icon(Icons.add_circle_outline, color: Colors.black54),
+                  onPressed: () => _alterarQuantidade(index, 1),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
+
 }
