@@ -2,8 +2,10 @@ import 'package:fastbuy/pages/historico_page.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/produto_model.dart';
 import '../repositories/produto_repository.dart';
+
 import 'dart:io';
 
 class ProdutosPage extends StatefulWidget {
@@ -16,14 +18,16 @@ class ProdutosPage extends StatefulWidget {
 class _ProdutosPageState extends State<ProdutosPage> {
   final _nomeController = TextEditingController();
   final _quantidadeController = TextEditingController();
-  final _valorController = TextEditingController(); 
+  final _valorController = TextEditingController();
 
   final _repository = ProdutoRepository();
-  
+
+  final TextEditingController _buscaController = TextEditingController();
+  String _termoBusca = "";
+
   List<Produto> _produtos = [];
 
   File? _imagemSelecionada;
-
 
   @override
   void initState() {
@@ -48,57 +52,63 @@ class _ProdutosPageState extends State<ProdutosPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    final produtosFiltrados = _produtos.where((produto) {
+    final nome = produto.nome.toLowerCase(); 
+    final busca = _termoBusca.toLowerCase();
+    return nome.contains(busca);
+  }).toList();
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 1. FUNDO DA APLICAÇÃO
+          // FUNDO DA APLICAÇÃO
           Positioned.fill(
             child: Image.asset(
               'assets/fundo.png',
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFF1E3A8A)),
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: const Color(0xFF1E3A8A)),
             ),
           ),
-          
+
           SafeArea(
             child: Column(
               children: [
                 _buildCabecalho(context),
                 _buildCardAdicionar(context),
                 _buildBotaoPesquisa(),
-                
 
-                // Grelha de produtos
-                // Grelha de produtos
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: _produtos.isEmpty 
-                      ? Center(
-                          child: Text(
-                            'Nenhum produto cadastrado ainda !',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.pacifico(
-                              fontSize: 40, 
-                              color: Colors.white,
+                    child: _produtos.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Nenhum produto cadastrado ainda !',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.pacifico(
+                                fontSize: 40,
+                                color: Colors.white,
+                              ),
                             ),
+                          )
+                        : GridView.builder(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  childAspectRatio: 0.75,
+                                ),
+                            itemCount: produtosFiltrados.length,
+                            itemBuilder: (context, index) {
+                              Produto produto = produtosFiltrados[index];
+                              return _buildCardProduto(produto);
+                            },
                           ),
-                        )
-                      : GridView.builder(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.75,
-                          ),
-                          itemCount: _produtos.length,
-                          itemBuilder: (context, index) {
-                            final produto = _produtos[index];
-                            return _buildCardProduto(produto);
-                          },
-                        ),
                   ),
                 ),
               ],
@@ -151,7 +161,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
             ),
             child: PopupMenuButton<String>(
               offset: const Offset(0, 50),
-              color: const Color(0xFF1A1F30), 
+              color: const Color(0xFF1A1F30),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 // AQUI: Contorno da caixinha agora é totalmente BRANCO
@@ -165,7 +175,10 @@ class _ProdutosPageState extends State<ProdutosPage> {
               ),
               onSelected: (String valor) {
                 if (valor == 'historico') {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoricoPage()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HistoricoPage()),
+                  );
                 } else if (valor == 'nome') {
                   print("Ação: Mudar Nome");
                 } else if (valor == 'foto') {
@@ -178,7 +191,10 @@ class _ProdutosPageState extends State<ProdutosPage> {
                   child: Center(
                     child: Text(
                       'Nome', // Texto padrão sem nome
-                      style: GoogleFonts.pacifico(color: Colors.white, fontSize: 22),
+                      style: GoogleFonts.pacifico(
+                        color: Colors.white,
+                        fontSize: 22,
+                      ),
                     ),
                   ),
                 ),
@@ -189,7 +205,10 @@ class _ProdutosPageState extends State<ProdutosPage> {
                     children: [
                       const Icon(Icons.store, color: Colors.white, size: 20),
                       const SizedBox(width: 12),
-                      Text('Mudar Nome', style: GoogleFonts.poppins(color: Colors.white)),
+                      Text(
+                        'Mudar Nome',
+                        style: GoogleFonts.poppins(color: Colors.white),
+                      ),
                     ],
                   ),
                 ),
@@ -198,9 +217,16 @@ class _ProdutosPageState extends State<ProdutosPage> {
                   value: 'foto',
                   child: Row(
                     children: [
-                      const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                      const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
-                      Text('Trocar Foto', style: GoogleFonts.poppins(color: Colors.white)),
+                      Text(
+                        'Trocar Foto',
+                        style: GoogleFonts.poppins(color: Colors.white),
+                      ),
                     ],
                   ),
                 ),
@@ -209,9 +235,16 @@ class _ProdutosPageState extends State<ProdutosPage> {
                   value: 'historico',
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_month, color: Colors.white, size: 20),
+                      const Icon(
+                        Icons.calendar_month,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
-                      Text('Histórico de Vendas', style: GoogleFonts.poppins(color: Colors.white)),
+                      Text(
+                        'Histórico de Vendas',
+                        style: GoogleFonts.poppins(color: Colors.white),
+                      ),
                     ],
                   ),
                 ),
@@ -251,7 +284,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
             Text(
               'Adicionar Novo Produto',
               style: GoogleFonts.poppins(
-                fontSize: 20, 
+                fontSize: 20,
                 color: const Color(0xFF1A3B5C),
               ),
             ),
@@ -261,7 +294,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
     );
   }
 
-  Widget _buildBotaoPesquisa() {
+  /*Widget _buildBotaoPesquisa() {
     return Padding(
       padding: const EdgeInsets.only(left: 24.0, bottom: 16.0),
       child: Align(
@@ -274,6 +307,41 @@ class _ProdutosPageState extends State<ProdutosPage> {
           child: IconButton(
             icon: const Icon(Icons.search, color: Colors.black54),
             onPressed: () {},
+          ),
+        ),
+      ),
+    );
+  }*/
+
+  Widget _buildBotaoPesquisa() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: TextField(
+        controller: _buscaController,
+        onChanged: (valor) {
+          setState(() {
+            _termoBusca = valor; // Atualiza a tela a cada letra digitada
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Buscar produto...',
+          hintStyle: GoogleFonts.poppins(color: Colors.grey),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF1E3A8A)),
+          suffixIcon: _termoBusca.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey),
+                  onPressed: () {
+                    _buscaController.clear();
+                    setState(() => _termoBusca = "");
+                  },
+                )
+              : null, // Mostra o "X" para limpar só se tiver algo digitado
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
           ),
         ),
       ),
@@ -296,16 +364,26 @@ class _ProdutosPageState extends State<ProdutosPage> {
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(15),
+                    ),
                   ),
-                  child: produto.imagemPath != null && produto.imagemPath!.isNotEmpty
+                  child:
+                      produto.imagemPath != null &&
+                          produto.imagemPath!.isNotEmpty
                       ? ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(15),
+                          ),
                           child: Image.file(
                             File(produto.imagemPath!),
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => 
-                                const Icon(Icons.image, size: 50, color: Colors.grey),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.image,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
                           ),
                         )
                       : const Icon(Icons.image, size: 50, color: Colors.grey),
@@ -316,22 +394,25 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 child: Column(
                   children: [
                     Text(
-                      produto.nome, 
-                      style: GoogleFonts.poppins(fontSize: 12), 
+                      produto.nome,
+                      style: GoogleFonts.poppins(fontSize: 12),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      'Valor: ${produto.valor.toStringAsFixed(2)}', 
-                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+                      'Valor: ${produto.valor.toStringAsFixed(2)}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
-          
+
           Positioned(
             top: 8,
             left: 8,
@@ -348,7 +429,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
               ),
             ),
           ),
-          
+
           Positioned(
             top: 8,
             right: 8,
@@ -361,24 +442,27 @@ class _ProdutosPageState extends State<ProdutosPage> {
                   shape: BoxShape.circle,
                   boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 2)],
                 ),
-                child: const Icon(Icons.edit, size: 16, color: Color(0xFF1E3A8A)),
+                child: const Icon(
+                  Icons.edit,
+                  size: 16,
+                  color: Color(0xFF1E3A8A),
+                ),
               ),
             ),
           ),
         ],
-
       ),
     );
   }
 
   void _mostrarDialogAdicionar(BuildContext context, {Produto? produto}) {
-    
     _nomeController.text = produto?.nome ?? '';
     _quantidadeController.text = produto?.quantidade.toString() ?? '';
     _valorController.text = produto?.valor.toStringAsFixed(2) ?? '';
-    _imagemSelecionada = (produto?.imagemPath != null && produto!.imagemPath!.isNotEmpty) 
-        ? File(produto.imagemPath!) 
-        : null; 
+    _imagemSelecionada =
+        (produto?.imagemPath != null && produto!.imagemPath!.isNotEmpty)
+        ? File(produto.imagemPath!)
+        : null;
 
     showDialog(
       context: context,
@@ -386,23 +470,34 @@ class _ProdutosPageState extends State<ProdutosPage> {
         return StatefulBuilder(
           builder: (context, setStateModal) {
             return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              backgroundColor: const Color(0xFFD4D8DD), 
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: const Color(0xFFD4D8DD),
               insetPadding: const EdgeInsets.all(20),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, 
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          produto == null ? 'Adicionar produto' : 'Editar produto',
-                          style: GoogleFonts.pacifico(fontSize: 26, color: const Color(0xFF1E3A8A)),
+                          produto == null
+                              ? 'Adicionar produto'
+                              : 'Editar produto',
+                          style: GoogleFonts.pacifico(
+                            fontSize: 26,
+                            color: const Color(0xFF1E3A8A),
+                          ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, size: 28, color: Color(0xFF1E3A8A)),
+                          icon: const Icon(
+                            Icons.close,
+                            size: 28,
+                            color: Color(0xFF1E3A8A),
+                          ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => Navigator.pop(context),
@@ -410,15 +505,15 @@ class _ProdutosPageState extends State<ProdutosPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    
 
                     GestureDetector(
                       onTap: () async {
                         final arquivos = await FilePicker.pickFiles(
-                          type: FileType.image, 
+                          type: FileType.image,
                         );
 
-                        if (arquivos.isNotEmpty && arquivos.first.path != null) {
+                        if (arquivos.isNotEmpty &&
+                            arquivos.first.path != null) {
                           setStateModal(() {
                             _imagemSelecionada = File(arquivos.first.path!);
                           });
@@ -430,19 +525,25 @@ class _ProdutosPageState extends State<ProdutosPage> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(15),
-                          image: _imagemSelecionada != null 
+                          image: _imagemSelecionada != null
                               ? DecorationImage(
                                   image: FileImage(_imagemSelecionada!),
                                   fit: BoxFit.contain,
                                 )
                               : null,
                         ),
-                        child: _imagemSelecionada == null 
-                            ? const Center(child: Icon(Icons.add_photo_alternate_outlined, size: 40, color: Colors.black26))
+                        child: _imagemSelecionada == null
+                            ? const Center(
+                                child: Icon(
+                                  Icons.add_photo_alternate_outlined,
+                                  size: 40,
+                                  color: Colors.black26,
+                                ),
+                              )
                             : null,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
                     TextField(
                       controller: _nomeController,
@@ -451,8 +552,14 @@ class _ProdutosPageState extends State<ProdutosPage> {
                         hintStyle: GoogleFonts.poppins(color: Colors.black38),
                         filled: true,
                         fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -464,11 +571,19 @@ class _ProdutosPageState extends State<ProdutosPage> {
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                               hintText: 'Quantidade',
-                              hintStyle: GoogleFonts.poppins(color: Colors.black38),
+                              hintStyle: GoogleFonts.poppins(
+                                color: Colors.black38,
+                              ),
                               filled: true,
                               fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
                           ),
                         ),
@@ -476,14 +591,24 @@ class _ProdutosPageState extends State<ProdutosPage> {
                         Expanded(
                           child: TextField(
                             controller: _valorController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             decoration: InputDecoration(
                               hintText: 'Valor (R\$)',
-                              hintStyle: GoogleFonts.poppins(color: Colors.black38),
+                              hintStyle: GoogleFonts.poppins(
+                                color: Colors.black38,
+                              ),
                               filled: true,
                               fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
                           ),
                         ),
@@ -496,16 +621,23 @@ class _ProdutosPageState extends State<ProdutosPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1A3B5C),
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
                         ),
 
                         onPressed: () async {
                           final produtoPronto = Produto(
-                            id: produto?.id, 
+                            id: produto?.id,
                             nome: _nomeController.text,
-                            quantidade: int.tryParse(_quantidadeController.text) ?? 0,
-                            valor: double.tryParse(_valorController.text.replaceAll(',', '.')) ?? 0.0,
-                            imagemPath: _imagemSelecionada?.path, 
+                            quantidade:
+                                int.tryParse(_quantidadeController.text) ?? 0,
+                            valor:
+                                double.tryParse(
+                                  _valorController.text.replaceAll(',', '.'),
+                                ) ??
+                                0.0,
+                            imagemPath: _imagemSelecionada?.path,
                           );
 
                           if (produto == null) {
@@ -527,14 +659,20 @@ class _ProdutosPageState extends State<ProdutosPage> {
                           }
                         },
 
-                        child: Text('Salvar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
+                        child: Text(
+                          'Salvar',
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             );
-          }
+          },
         );
       },
     );
@@ -545,7 +683,9 @@ class _ProdutosPageState extends State<ProdutosPage> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           backgroundColor: const Color(0xFFD4D8DD),
           insetPadding: const EdgeInsets.all(20),
           child: Padding(
@@ -556,7 +696,11 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
-                    icon: const Icon(Icons.close, size: 28, color: Colors.black87),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 28,
+                      color: Colors.black87,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () => Navigator.pop(context),
