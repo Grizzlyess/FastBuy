@@ -25,8 +25,10 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
   List<ItemVenda> _itensVenda = [];
   
   bool _carrinhoExpandido = false;
+
+  final TextEditingController _buscaController = TextEditingController();
+  String _termoBusca = "";
   
-  // NOVAS VARIÁVEIS PARA A TELA DE SUCESSO
   bool _vendaConcluida = false; 
   double _ultimoTotal = 0.0;    
 
@@ -59,6 +61,13 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    final itensFiltrados = _itensVenda.where((item) {
+      final nome = item.produto.nome.toLowerCase(); 
+      final busca = _termoBusca.toLowerCase();
+      return nome.contains(busca);
+    }).toList();
+    
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -165,9 +174,12 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                                 mainAxisSpacing: 16,
                                 childAspectRatio: 0.75,
                               ),
-                              itemCount: _itensVenda.length,
+                              itemCount: itensFiltrados.length,
                               itemBuilder: (context, index) {
-                                return _buildCardProdutoVenda(index);
+                                final item = itensFiltrados[index];
+                                final indexOriginal = _itensVenda.indexOf(item);
+                                
+                                return _buildCardProdutoVenda(indexOriginal);
                               },
                             ),
                     ),
@@ -400,7 +412,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
     );
   }
 
-  Widget _buildBotaoPesquisa() {
+  /*Widget _buildBotaoPesquisa() {
     return Padding(
       padding: const EdgeInsets.only(left: 24.0, bottom: 10.0),
       child: Align(
@@ -413,6 +425,41 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
           child: IconButton(
             icon: const Icon(Icons.search, color: Colors.black54),
             onPressed: () {},
+          ),
+        ),
+      ),
+    );
+  }*/
+
+  Widget _buildBotaoPesquisa() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: TextField(
+        controller: _buscaController,
+        onChanged: (valor) {
+          setState(() {
+            _termoBusca = valor;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Buscar no carrinho...',
+          hintStyle: GoogleFonts.poppins(color: Colors.grey),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF1E3A8A)),
+          suffixIcon: _termoBusca.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey),
+                  onPressed: () { 
+                    _buscaController.clear();
+                    setState(() => _termoBusca = "");
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
           ),
         ),
       ),
