@@ -30,7 +30,13 @@ class ProdutoRepository {
     );
   }
 
-  Future<void> atualizarEstoquePosVenda(int idProduto, int quantidadeVendida, double valorTotal, String nomeProduto) async {
+  Future<void> atualizarEstoquePosVenda(
+    int idProduto, 
+    int quantidadeVendida, 
+    double valorTotal, 
+    String nomeProduto,
+    String metodoPagamento 
+  ) async {
     Database db = await dbHelper.database; 
     
     await db.transaction((txn) async {
@@ -39,8 +45,8 @@ class ProdutoRepository {
         [quantidadeVendida, idProduto]
       );
       await txn.rawInsert(
-        'INSERT INTO vendas (produto_id, nome_produto, quantidade_vendida, valor_total, data_venda) VALUES (?, ?, ?, ?, ?)',
-        [idProduto, nomeProduto, quantidadeVendida, valorTotal, DateTime.now().toIso8601String()]
+        'INSERT INTO vendas (produto_id, nome_produto, quantidade_vendida, valor_total, metodo_pagamento, data_venda) VALUES (?, ?, ?, ?, ?, ?)',
+        [idProduto, nomeProduto, quantidadeVendida, valorTotal, metodoPagamento, DateTime.now().toIso8601String()]
       );
     });
   }

@@ -255,7 +255,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                           ),
                         ),
 
-                      // BOTÃO FINALIZAR ATUALIZADO
+                      // BOTÃO FINALIZAR
                       Padding(
                         padding: const EdgeInsets.only(left: 40.0, right: 40.0, bottom: 20.0, top: 10),
                         child: ElevatedButton(
@@ -264,27 +264,7 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
                             minimumSize: const Size(double.infinity, 45),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                           ),
-                          onPressed: _totalVenda > 0 ? () async {
-                            // 1. Desconta no banco de dados e regista o histórico
-                            for (var item in _itensVenda) {
-                              if (item.quantidadeSelecionada > 0 && item.produto.id != null) {
-                                await _repository.atualizarEstoquePosVenda(
-                                    item.produto.id!, 
-                                    item.quantidadeSelecionada,
-                                    (item.produto.valor * item.quantidadeSelecionada), 
-                                    item.produto.nome
-                                );
-                              }
-                            }
-
-                            setState(() {
-                              _ultimoTotal = _totalVenda; 
-                              _vendaConcluida = true;     
-                              _carrinhoExpandido = false; 
-                            });
-
-                            _carregarProdutos();
-                          } : null,
+                          onPressed: _totalVenda > 0 ? () => _mostrarDialogPagamento(context) : null,
                           child: Text('Finalizar', style: GoogleFonts.poppins(fontSize: 20, color: Colors.white)),
                         ),
                       ),
@@ -643,4 +623,71 @@ class _CarrinhoPageState extends State<CarrinhoPage> {
     );
   }
 
+  void _mostrarDialogPagamento(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
+          title: Text(
+            'Forma de Pagamento', 
+            style: GoogleFonts.pacifico(color: const Color(0xFF1E3A8A)), 
+            textAlign: TextAlign.center
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _botaoPagamento(context, 'Pix', Icons.pix, Colors.teal),
+              const SizedBox(height: 12),
+              _botaoPagamento(context, 'Cartão', Icons.credit_card, Colors.orange),
+              const SizedBox(height: 12),
+              _botaoPagamento(context, 'Dinheiro', Icons.attach_money, Colors.green),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  Widget _botaoPagamento(BuildContext context, String metodo, IconData icone, Color cor) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: cor,
+        minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      ),
+      icon: Icon(icone, color: Colors.white),
+      label: Text(
+        metodo, 
+        style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)
+      ),
+      onPressed: () {
+        Navigator.pop(context); // Fecha o pop-up
+        _concluirVenda(metodo); // Chama a função de finalizar passando o método (Pix, Cartão, etc.)
+      },
+    );
+  }
+
+  Future<void> _concluirVenda(String formaPagamento) async {
+    for (var item in _itensVenda) {
+      if (item.quantidadeSelecionada > 0 && item.produto.id != null) {
+        await _repository.atualizarEstoquePosVenda(
+            item.produto.id!, 
+            item.quantidadeSelecionada,
+            (item.produto.valor * item.quantidadeSelecionada), 
+            item.produto.nome,
+            formaPagamento 
+        );
+      }
+    }
+
+    setState(() {
+      _ultimoTotal = _totalVenda; 
+      _vendaConcluida = true;     
+      _carrinhoExpandido = false; 
+    });
+
+    _carregarProdutos();
+  }
 }
