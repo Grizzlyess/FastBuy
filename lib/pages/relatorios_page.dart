@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/produto_model.dart';
 import '../repositories/produto_repository.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 class RelatoriosPage extends StatefulWidget {
   const RelatoriosPage({super.key});
 
@@ -21,10 +23,70 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
   List<Map<String, dynamic>> _faturamentoDias = [];
   List<Map<String, dynamic>> _faturamentoSemanas = [];
 
+  String _nomeUsuario = 'Nome';
+  String? _fotoUsuario;
+
   @override
   void initState() {
     super.initState();
     _carregarDados();
+    _carregarPerfil();
+  }
+
+  Future<void> _carregarPerfil() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nomeUsuario = prefs.getString('nome_usuario') ?? 'Nome';
+      _fotoUsuario = prefs.getString('foto_usuario');
+    });
+  }
+
+  Future<void> _mudarNomeDireto() async {
+    TextEditingController controleNome = TextEditingController(text: _nomeUsuario == 'Nome' ? '' : _nomeUsuario);
+    
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: Text('Mudar Nome', style: GoogleFonts.poppins(color: const Color(0xFF1E3A8A), fontWeight: FontWeight.bold)),
+          content: TextField(
+            controller: controleNome,
+            decoration: InputDecoration(
+              hintText: "Digite o seu nome",
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancelar', style: GoogleFonts.poppins(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A3B5C)),
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('nome_usuario', controleNome.text);
+                if (mounted) Navigator.pop(context);
+                _carregarPerfil(); // Atualiza na hora
+              },
+              child: Text('Salvar', style: GoogleFonts.poppins(color: Colors.white)),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  Future<void> _trocarFotoDireto() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? imagemEscolhida = await picker.pickImage(source: ImageSource.gallery);
+    
+    if (imagemEscolhida != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('foto_usuario', imagemEscolhida.path);
+      _carregarPerfil(); // Atualiza na hora
+    }
   }
 
   Future<void> _carregarDados() async {
@@ -135,18 +197,6 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
     );
   }
 
-  /*Widget _buildCabecalho() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('🚀FastBuy🚀', style: GoogleFonts.pacifico(color: Colors.white, fontSize: 24)),
-          const CircleAvatar(backgroundColor: Colors.white, radius: 20, child: Icon(Icons.person, color: Color(0xFF1E3A8A))),
-        ],
-      ),
-    );
-  }*/
 
   Widget _buildCabecalho(BuildContext context) {
     return Padding(
@@ -168,22 +218,22 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
               color: const Color(0xFF1A1F30), 
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                // AQUI: Contorno da caixinha agora é totalmente BRANCO
                 side: const BorderSide(color: Colors.white, width: 1.5),
               ),
-              // A bolinha do perfil padrão (Branca com boneco azul)
-              icon: const CircleAvatar(
+              // A bolinha do perfil 
+              icon: CircleAvatar(
                 radius: 22,
                 backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Color(0xFF1E3A8A), size: 28),
+                backgroundImage: _fotoUsuario != null ? FileImage(File(_fotoUsuario!)) : null,
+                child: _fotoUsuario == null ? const Icon(Icons.person, color: Color(0xFF1E3A8A), size: 28) : null,
               ),
-              onSelected: (String valor) {
+              onSelected: (String valor) async {
                 if (valor == 'historico') {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoricoPage()));
                 } else if (valor == 'nome') {
-                  print("Ação: Mudar Nome");
+                  await _mudarNomeDireto();
                 } else if (valor == 'foto') {
-                  print("Ação: Trocar Foto");
+                  await _trocarFotoDireto();
                 }
               },
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -191,7 +241,7 @@ class _RelatoriosPageState extends State<RelatoriosPage> {
                   enabled: false,
                   child: Center(
                     child: Text(
-                      'Nome', // Texto padrão sem nome
+                      _nomeUsuario, 
                       style: GoogleFonts.pacifico(color: Colors.white, fontSize: 22),
                     ),
                   ),
